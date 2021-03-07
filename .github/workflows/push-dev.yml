@@ -1,0 +1,44 @@
+name: CI to distribute workflows changes to dev branches of microservices projects
+
+on:
+  push:
+    tags:
+      - v*
+    branches: [ dev, feature/UBI-253-Create-PR-for-CI-distribution ]
+
+env:
+  GIT_USER: ${{ secrets.GIT_USERNAME }}
+  GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
+  GIT_SSH_KEY: ${{ secrets.GIT_SSH_KEY }}
+  GH_TOKEN: ${{ secrets.GITHUBCLI_TOKEN }}
+
+jobs:
+  pull-workflows-changes:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Git
+      run: |
+        export GH_TOKEN=${{ env.GH_TOKEN }}
+        git config --global user.name "${{ env.GIT_USER }}"
+        git config --global user.email "${{ env.GIT_EMAIL }}"
+        mkdir ~/.ssh
+        echo -e "${{ env.GIT_SSH_KEY }}" | tee ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        chmod 700 scripts/git_setup.sh
+        ./scripts/git_setup.sh
+
+    - name: Pull microservices repositories and create new branches
+      run: |
+        chmod 700 scripts/prepare_dev_microservice.sh
+        cat repository_list.txt | ./scripts/prepare_dev_microservice.sh
+
+    - name: Update files and commit changes
+      run: |
+        chmod 700 scripts/add_files.sh
+        cat repository_list.txt | ./scripts/add_files.sh
+
+    - name: Create pull requests
+      run: |
+        chmod 700 scripts/create_dev_pr.sh
+        cat repository_list.txt | ./scripts/create_dev_pr.sh
