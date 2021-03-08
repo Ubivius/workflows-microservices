@@ -40,5 +40,7 @@ jobs:
 
     - name: Create pull requests
       run: |
+        IN=$(echo $GITHUB_REF)
+        export branchName=${IN#"refs/heads/"}
         chmod 700 scripts/create_main_pr.sh
         cat repository_list.txt | ./scripts/create_main_pr.sh
