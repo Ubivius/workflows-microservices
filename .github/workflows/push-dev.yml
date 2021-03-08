@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - v*
-    branches: [ dev, feature/UBI-253-Create-PR-for-CI-distribution ]
+    branches: [ dev ]
 
 env:
   GIT_USER: ${{ secrets.GIT_USERNAME }}
@@ -40,7 +40,6 @@ jobs:
 
     - name: Create pull requests
       run: |
-        echo "Creating PRs"
         IN=$(echo $GITHUB_REF)
         export branchName=${IN#"refs/heads/"}
         chmod 700 scripts/create_dev_pr.sh
