@@ -1,6 +1,4 @@
 #!/bin/sh
-branchName=${$GITHUB_REF#"refs/heads/"}
-
 while read line;
 do
     cd $line;
