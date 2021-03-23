@@ -40,9 +40,14 @@ jobs:
 
     - name: Create pull requests
       run: |
-        git fetch
-        IN=$(git log --oneline --merges dev -1 | grep -o "Ubivius/[a-zA-Z]*\/[a-zA-Z0-9-]*")
-        export branchName=${IN#"Ubivius/"}
-        echo $IN
+        git pull
+        echo "this is 1"
+        IN=$(git log --oneline --merges dev -1)
+        echo "this is 2: $IN"
+        STR=$(grep -o "Ubivius/[a-zA-Z]*\/[a-zA-Z0-9-]*" <(echo "$IN"))
+        echo "this is 3: $STR"
+        export branchName=${STR#"Ubivius/"}
+        echo "this is 4: $branchName"
         chmod 700 scripts/create_dev_pr.sh
+        echo "this is 5"
         cat repository_list.txt | ./scripts/create_dev_pr.sh
