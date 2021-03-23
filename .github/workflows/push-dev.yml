@@ -44,7 +44,7 @@ jobs:
         IN=$(git log --oneline --merges origin/dev -1 | grep -o "Ubivius/[a-zA-Z]*\/[a-zA-Z0-9-]*")
         INi=$(git log --oneline --merges dev -1 | grep -o "Ubivius/[a-zA-Z]*\/[a-zA-Z0-9-]*")
         export branchName=${INi#"Ubivius/"}
-        cat $IN
-        cat $INi
+        echo $IN
+        echo $INi
         chmod 700 scripts/create_dev_pr.sh
         cat repository_list.txt | ./scripts/create_dev_pr.sh
