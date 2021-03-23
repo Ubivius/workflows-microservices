@@ -40,7 +40,8 @@ jobs:
 
     - name: Create pull requests
       run: |
-        IN=$(echo $GITHUB_REF)
-        export branchName=${IN#"refs/heads/"}
+        git fetch
+        IN=$(git log --oneline --merges origin/dev -1 | grep -o "Ubivius/[a-zA-Z]*\/[a-zA-Z0-9-]*")
+        export branchName=${IN#"Ubivius/"}
         chmod 700 scripts/create_dev_pr.sh
         cat repository_list.txt | ./scripts/create_dev_pr.sh
