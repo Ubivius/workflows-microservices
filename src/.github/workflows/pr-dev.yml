@@ -1,8 +1,8 @@
-name: CI for Pull-Request on master/main
+name: CI for Pull-Request on dev
 
 on:
   pull_request:
-    branches: [ master, main ]
+    branches: [ dev ]
 
 jobs:
   build-and-test:
@@ -17,8 +17,8 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Test
-      run: go test -v ./...
+    - name: Unit tests
+      run: go test -short -v ./...
 
   golangci-lint:
     runs-on: ubuntu-latest
