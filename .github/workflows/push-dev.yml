@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: Setup Git
       run: |
         export GH_TOKEN=${{ env.GH_TOKEN }}
@@ -40,8 +42,7 @@ jobs:
 
     - name: Create pull requests
       run: |
-        git fetch
-        IN=$(git log --oneline --merges origin/dev -1 | grep -o "Ubivius/[a-zA-Z]*\/[a-zA-Z0-9-]*")
-        export branchName=${IN#"Ubivius/"}
+        STR=$(git log --oneline --merges dev -1 | grep -o "Ubivius/[a-zA-Z]*\/[a-zA-Z0-9-]*")
+        export branchName=${STR#"Ubivius/"}
         chmod 700 scripts/create_dev_pr.sh
         cat repository_list.txt | ./scripts/create_dev_pr.sh

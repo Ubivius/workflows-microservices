@@ -4,6 +4,7 @@ do
     git clone git@github.com:Ubivius/$line.git;
     cd $line;
     git checkout dev;
+    git pull;
     git checkout -b hotfix/workflows-update;
     git add .;
     git commit -m "Creating workflows updated branch";
