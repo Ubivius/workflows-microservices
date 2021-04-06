@@ -21,28 +21,28 @@ jobs:
         fetch-depth: 0
     - name: Setup Git
       run: |
-        export GH_TOKEN=${{ env.GH_TOKEN }}
-        git config --global user.name "${{ env.GIT_USER }}"
-        git config --global user.email "${{ env.GIT_EMAIL }}"
-        mkdir ~/.ssh
-        echo -e "${{ env.GIT_SSH_KEY }}" | tee ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        chmod 700 scripts/git_setup.sh
-        ./scripts/git_setup.sh
+          export GH_TOKEN=${{ env.GH_TOKEN }}
+          git config --global user.name "${{ env.GIT_USER }}"
+          git config --global user.email "${{ env.GIT_EMAIL }}"
+          mkdir ~/.ssh
+          echo -e "${{ env.GIT_SSH_KEY }}" | tee ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          chmod 700 scripts/git_setup.sh
+          ./scripts/git_setup.sh
 
     - name: Pull microservices repositories and create new branches
       run: |
-        chmod 700 scripts/prepare_dev_microservice.sh
-        cat repository_list.txt | ./scripts/prepare_dev_microservice.sh
+          chmod 700 scripts/prepare_dev_microservice.sh
+          cat repository_list.txt | ./scripts/prepare_dev_microservice.sh
 
     - name: Update files and commit changes
       run: |
-        chmod 700 scripts/add_files.sh
-        cat repository_list.txt | ./scripts/add_files.sh
+          chmod 700 scripts/add_files.sh
+          cat repository_list.txt | ./scripts/add_files.sh
 
     - name: Create pull requests
       run: |
-        STR=$(git log --oneline --merges dev -1 | grep -o "Ubivius/[a-zA-Z]*\/[a-zA-Z0-9-]*")
-        export branchName=${STR#"Ubivius/"}
-        chmod 700 scripts/create_dev_pr.sh
-        cat repository_list.txt | ./scripts/create_dev_pr.sh
+          STR=$(git log --oneline --merges dev -1 | grep -o "Ubivius/[a-zA-Z]*\/[a-zA-Z0-9-]*")
+          export branchName=${STR#"Ubivius/"}
+          chmod 700 scripts/create_dev_pr.sh
+          cat repository_list.txt | ./scripts/create_dev_pr.sh
