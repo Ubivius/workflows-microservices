@@ -2,7 +2,7 @@
 while read line;
 do
     cp -Rf src/.github $line;
-    sed -i "s/msName/$line/g" "src/Dockerfile";
+    sed -i "s/microserviceName/$line/g" "src/Dockerfile";
     cp -Rf src/Dockerfile $line;
     cd $line;
     git add .;
