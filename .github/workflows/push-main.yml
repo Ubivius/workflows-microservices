@@ -42,7 +42,7 @@ jobs:
 
     - name: Create pull requests
       run: |
-          STR=$(git log --oneline --merges master -1 | grep -o "Ubivius/[a-zA-Z]*\/[a-zA-Z0-9-]*")
+          STR=$(git log --oneline --merges master -1 | grep -o "Ubivius/[a-zA-Z0-9-]*")
           export branchName=${STR#"Ubivius/"}
           chmod 700 scripts/create_main_pr.sh
           cat repository_list.txt | ./scripts/create_main_pr.sh
