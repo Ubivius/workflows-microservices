@@ -9,20 +9,25 @@ on:
 env:
   BUILD_TYPE: prod
   DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
-  DOCKERHUB_EMAIL: ${{ secrets.DOCKERHUB_EMAIL }}
   DOCKERHUB_PWD: ${{ secrets.DOCKERHUB_PWD }}
-  REPO_VERSION: 0.0.0
+  GKE_USER: ${{ secrets.GKE_SERVICEACCOUNT_EMAIL }}
+  GKE_JSON: ${{ secrets.GKE_SERVICEACCOUNT_JSONKEY }}
+  GKE_CLUSTER_NAME: ${{ secrets.GKE_PROD_CLUSTER_NAME }}
+  GKE_CLUSTER_ZONE: ${{ secrets.GKE_PROD_CLUSTER_ZONE }}
+  GKE_CLUSTER_PROJECT: ${{ secrets.GKE_PROD_CLUSTER_PROJECT }}
+  LKE_SERVICEACCOUNT_TOKEN: ${{ secrets.LKE_SERVICEACCOUNT_TOKEN }}
+  LKE_CLUSTERID: ${{ secrets.LKE_PROD_CLUSTERID }}
+
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.15
+        go-version: 1.16
 
     - name: Build
       run: go build -v ./...
@@ -44,13 +49,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Pre-load env-var
-        id: fetch-vars
+      - name: Prepare docker env
+        id: fetch-docker-vars
         run: |
+            chmod 700 .github/tools_install.sh
+            ./.github/tools_install.sh
             IN=$(echo ${GITHUB_REPOSITORY})
             NAME=${IN#"Ubivius/"}
+            VERSION=$(yq e '.version' ./chart/Chart.yaml)
             echo "::set-output name=REPO_NAME::$(echo $NAME)"
             echo "::set-output name=BRANCH::$(echo $GITHUB_REF)"
+            echo "::set-output name=REPO_VERSION::$(echo $VERSION)"
         shell: bash
 
       - name: Build and Push Artefact to Registry
@@ -58,9 +67,48 @@ jobs:
         env:
           BUILD_TYPE: ${{ env.BUILD_TYPE }}
         with:
-          name: ubivius/${{ steps.fetch-vars.outputs.REPO_NAME }}
+          name: ubiviushub/${{ steps.fetch-docker-vars.outputs.REPO_NAME }}
           username: ${{ env.DOCKERHUB_USER }}
           password: ${{ env.DOCKERHUB_PWD }}
           buildargs: BUILD_TYPE
           dockerfile: Dockerfile
-          tags: "${{ env.REPO_VERSION }}"
+          tags: "${{ steps.fetch-docker-vars.outputs.REPO_VERSION }}"
+
+  publish-helm:
+    needs: [ build-and-test, golangci-lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Prepare helm env
+        id: fetch-helm-vars
+        run: |
+            chmod 700 .github/tools_install.sh
+            ./.github/tools_install.sh
+      
+      - name: Package and Push Chart to ChartMuseum
+        run: |
+            IN=$(echo ${GITHUB_REPOSITORY})
+            NAME=${IN#"Ubivius/"}
+            VERSION=$(yq e '.version' ./chart/Chart.yaml)
+            FULL_NAME="./${NAME}-${VERSION}.tgz"
+            helm package chart/
+            helm cm-push $FULL_NAME ysma500 -f
+            helm repo update
+
+  deployment-lke:
+    needs: [publish-docker, publish-helm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Prepare deploy env
+        run: |
+            chmod 700 .github/tools_install.sh
+            ./.github/tools_install.sh
+            curl -H "Authorization: Bearer ${{ env.LKE_SERVICEACCOUNT_TOKEN }}" https://api.linode.com/v4/lke/clusters/${{ env.LKE_CLUSTERID }}/kubeconfig | jq '.kubeconfig' | sed 's/["]//g' | base64 --decode > ~/.kube/config
+
+      - name: Push with valuefile
+        run: |
+            IN=$(echo ${GITHUB_REPOSITORY})
+            NAME=${IN#"Ubivius/"}
+            VERSION=$(yq e '.version' ./chart/Chart.yaml)
+            helm upgrade $NAME --install --version $VERSION ysma500/$NAME -f chart/values.yaml
