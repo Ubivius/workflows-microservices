@@ -24,3 +24,4 @@ COPY --from=build-env /go/src/main /microservice
 EXPOSE 8888
 EXPOSE 9090
 CMD ["/microservice"]
+
