@@ -62,6 +62,7 @@ jobs:
         printf "running container... \n\n"
         docker run -d --name local-mongo -p 27888:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=pass mongo
         go test ./... -run Integration
+
   pr-naming-rules:
     runs-on: ubuntu-latest
     steps:
