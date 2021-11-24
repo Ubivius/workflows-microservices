@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - v*
-    branches: [ master, main ]
+    branches: [ never ]
 
 env:
   GIT_USER: ${{ secrets.GIT_USERNAME }}
